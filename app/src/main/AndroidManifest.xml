@@ -12,7 +12,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Reminder"
-        android:theme="@style/Theme.AppCompat.NoActionBar">
+        android:theme="@style/Theme.NoActionBar">
 
         <activity
             android:name=".MainActivity"
