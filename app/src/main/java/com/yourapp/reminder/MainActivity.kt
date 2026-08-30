@@ -48,11 +48,13 @@ data class Note(
 @Dao
 interface NoteDao {
     @Insert suspend fun insert(note: Note)
-    @Query("SELECT * FROM notes ORDER BY timestamp ASC") fun getAll(): Flow<List<Note>>
-    @Query("DELETE FROM notes WHERE id = :id") suspend fun delete(id: Int)
+    @Query("SELECT * FROM notes ORDER BY timestamp ASC") 
+    fun getAll(): kotlinx.coroutines.flow.Flow<List<Note>>
+    @Query("DELETE FROM notes WHERE id = :id") 
+    suspend fun delete(id: Int)
 }
 
-@Database(entities = [Note::class], version = 1)
+@Database(entities = [Note::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dao(): NoteDao
     companion object {
@@ -87,7 +89,7 @@ object AlarmScheduler {
     }
 }
 
-// ==================== РЕСИВЕР (сигнал + голос) ====================
+// ==================== РЕСИВЕР ====================
 class AlarmReceiver : BroadcastReceiver() {
     private lateinit var tts: TextToSpeech
 
@@ -95,7 +97,6 @@ class AlarmReceiver : BroadcastReceiver() {
         val id = intent.getIntExtra("id", -1)
         val title = intent.getStringExtra("title") ?: "Напоминание"
 
-        // 1. Трёхкратный системный звук
         val ringtone = RingtoneManager.getRingtone(context, 
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
         repeat(3) {
@@ -105,10 +106,8 @@ class AlarmReceiver : BroadcastReceiver() {
             Thread.sleep(200)
         }
 
-        // 2. Вибрация
         ContextCompat.getSystemService(context, Vibrator::class.java)?.vibrate(1000)
 
-        // 3. Озвучивание названия
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 tts.language = Locale("ru")
@@ -116,7 +115,6 @@ class AlarmReceiver : BroadcastReceiver() {
             }
         }
 
-        // 4. Удалить заметку
         CoroutineScope(Dispatchers.IO).launch {
             if (id != -1) AppDatabase.get(context).dao().delete(id)
         }
@@ -145,7 +143,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme()) // тёмная тема
+            MaterialTheme(colorScheme = darkColorScheme())
             MainScreen()
         }
     }
@@ -264,7 +262,6 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // Кнопка выбора времени
                     Button(
                         onClick = {
                             showDatePicker = true
@@ -314,7 +311,6 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
             textContentColor = MaterialTheme.colorScheme.onSurface
         )
 
-        // DatePicker
         if (showDatePicker) {
             DatePickerDialog(
                 ctx,
@@ -329,7 +325,6 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
             ).show()
         }
 
-        // TimePicker
         if (showTimePicker) {
             TimePickerDialog(
                 ctx,
