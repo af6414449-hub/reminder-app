@@ -48,9 +48,9 @@ data class Note(
 @Dao
 interface NoteDao {
     @Insert suspend fun insert(note: Note)
-    @Query("SELECT * FROM notes ORDER BY timestamp ASC") 
+    @Query("SELECT * FROM notes ORDER BY timestamp ASC")
     fun getAll(): kotlinx.coroutines.flow.Flow<List<Note>>
-    @Query("DELETE FROM notes WHERE id = :id") 
+    @Query("DELETE FROM notes WHERE id = :id")
     suspend fun delete(id: Int)
 }
 
@@ -81,7 +81,7 @@ object AlarmScheduler {
 
     fun cancel(context: Context, noteId: Int) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val pi = PendingIntent.getBroadcast(context, noteId, 
+        val pi = PendingIntent.getBroadcast(context, noteId,
             Intent(context, AlarmReceiver::class.java),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         am.cancel(pi)
@@ -97,7 +97,7 @@ class AlarmReceiver : BroadcastReceiver() {
         val id = intent.getIntExtra("id", -1)
         val title = intent.getStringExtra("title") ?: "Напоминание"
 
-        val ringtone = RingtoneManager.getRingtone(context, 
+        val ringtone = RingtoneManager.getRingtone(context,
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM))
         repeat(3) {
             ringtone?.play()
@@ -133,15 +133,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun add(note: Note) = viewModelScope.launch { db.dao().insert(note) }
-    fun delete(id: Int) = viewModelScope.launch { db.dao().delete(id) }
+    fun add(note: Note) = viewModelScope.launch {
+        db.dao().insert(note)
+    }
+
+    fun delete(id: Int) = viewModelScope.launch {
+        db.dao().delete(id)
+    }
 }
 
 // ==================== MAIN ACTIVITY ====================
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         setContent {
             MaterialTheme(colorScheme = darkColorScheme())
             MainScreen()
@@ -223,12 +228,10 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
         var title by remember { mutableStateOf("") }
         var content by remember { mutableStateOf("") }
         var cal by remember { mutableStateOf(Calendar.getInstance()) }
-        var showDatePicker by remember { mutableStateOf(false) }
-        var showTimePicker by remember { mutableStateOf(false) }
 
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { 
+            title = {
                 Text(
                     "Новая заметка",
                     color = MaterialTheme.colorScheme.onSurface
@@ -261,10 +264,30 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
                         )
                     )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     Button(
                         onClick = {
-                            showDatePicker = true
+                            val calendar = Calendar.getInstance()
+                            DatePickerDialog(
+                                ctx,
+                                { _, year, month, day ->
+                                    calendar.set(year, month, day)
+                                    TimePickerDialog(
+                                        ctx,
+                                        { _, hour, minute ->
+                                            calendar.set(Calendar.HOUR_OF_DAY, hour)
+                                            calendar.set(Calendar.MINUTE, minute)
+                                            cal = calendar
+                                        },
+                                        calendar.get(Calendar.HOUR_OF_DAY),
+                                        calendar.get(Calendar.MINUTE),
+                                        true
+                                    ).show()
+                                },
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            ).show()
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -310,33 +333,5 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
             titleContentColor = MaterialTheme.colorScheme.onSurface,
             textContentColor = MaterialTheme.colorScheme.onSurface
         )
-
-        if (showDatePicker) {
-            DatePickerDialog(
-                ctx,
-                { _: DatePicker, year: Int, month: Int, day: Int ->
-                    cal.set(year, month, day)
-                    showDatePicker = false
-                    showTimePicker = true
-                },
-                cal.get(Calendar.YEAR),
-                cal.get(Calendar.MONTH),
-                cal.get(Calendar.DAY_OF_MONTH)
-            ).show()
-        }
-
-        if (showTimePicker) {
-            TimePickerDialog(
-                ctx,
-                { _: TimePicker, hour: Int, minute: Int ->
-                    cal.set(Calendar.HOUR_OF_DAY, hour)
-                    cal.set(Calendar.MINUTE, minute)
-                    showTimePicker = false
-                },
-                cal.get(Calendar.HOUR_OF_DAY),
-                cal.get(Calendar.MINUTE),
-                true
-            ).show()
-        }
     }
 }
