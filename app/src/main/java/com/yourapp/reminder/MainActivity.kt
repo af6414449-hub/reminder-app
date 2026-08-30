@@ -133,12 +133,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun add(note: Note) = viewModelScope.launch {
-        db.dao().insert(note)
+    fun add(note: Note) {
+        viewModelScope.launch {
+            db.dao().insert(note)
+        }
     }
 
-    fun delete(id: Int) = viewModelScope.launch {
-        db.dao().delete(id)
+    fun delete(id: Int) {
+        viewModelScope.launch {
+            db.dao().delete(id)
+        }
     }
 }
 
@@ -155,10 +159,14 @@ class MainActivity : ComponentActivity() {
 }
 
 // ==================== UI ====================
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(vm: MainViewModel = viewModel()) {
+fun MainScreen() {
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    val vm: MainViewModel = viewModel(factory = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(application))
+    
     val notes by vm.items.collectAsState()
-    val ctx = LocalContext.current
     var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -207,7 +215,7 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
                             )
                             Button(
                                 onClick = {
-                                    AlarmScheduler.cancel(ctx, note.id)
+                                    AlarmScheduler.cancel(context, note.id)
                                     vm.delete(note.id)
                                 },
                                 colors = ButtonDefaults.buttonColors(
@@ -269,11 +277,11 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
                         onClick = {
                             val calendar = Calendar.getInstance()
                             DatePickerDialog(
-                                ctx,
+                                context,
                                 { _, year, month, day ->
                                     calendar.set(year, month, day)
                                     TimePickerDialog(
-                                        ctx,
+                                        context,
                                         { _, hour, minute ->
                                             calendar.set(Calendar.HOUR_OF_DAY, hour)
                                             calendar.set(Calendar.MINUTE, minute)
@@ -308,7 +316,7 @@ fun MainScreen(vm: MainViewModel = viewModel()) {
                                 timestamp = cal.timeInMillis
                             )
                             vm.add(note)
-                            AlarmScheduler.set(ctx, note.id, title, cal.timeInMillis)
+                            AlarmScheduler.set(context, note.id, title, cal.timeInMillis)
                             showDialog = false
                         }
                     },
