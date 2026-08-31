@@ -159,7 +159,6 @@ class MainActivity : ComponentActivity() {
 }
 
 // ==================== UI ====================
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
     val context = LocalContext.current
@@ -253,11 +252,7 @@ fun MainScreen() {
                         value = title,
                         onValueChange = { title = it },
                         label = { Text("Название (озвучивается)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        )
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -265,11 +260,7 @@ fun MainScreen() {
                         onValueChange = { content = it },
                         label = { Text("Текст (не озвучивается)") },
                         minLines = 3,
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                        )
+                        modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(12.dp))
 
@@ -278,12 +269,12 @@ fun MainScreen() {
                             val calendar = Calendar.getInstance()
                             DatePickerDialog(
                                 context,
-                                { _, year, month, day ->
-                                    calendar.set(year, month, day)
+                                { _, year, month, dayOfMonth ->
+                                    calendar.set(year, month, dayOfMonth)
                                     TimePickerDialog(
                                         context,
-                                        { _, hour, minute ->
-                                            calendar.set(Calendar.HOUR_OF_DAY, hour)
+                                        { _, hourOfDay, minute ->
+                                            calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
                                             calendar.set(Calendar.MINUTE, minute)
                                             cal = calendar
                                         },
@@ -297,10 +288,7 @@ fun MainScreen() {
                                 calendar.get(Calendar.DAY_OF_MONTH)
                             ).show()
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary
-                        )
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("📅 ${SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(cal.time)}")
                     }
@@ -319,27 +307,18 @@ fun MainScreen() {
                             AlarmScheduler.set(context, note.id, title, cal.timeInMillis)
                             showDialog = false
                         }
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary
-                    )
+                    }
                 ) {
                     Text("Сохранить")
                 }
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showDialog = false },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+                    onClick = { showDialog = false }
                 ) {
                     Text("Отмена")
                 }
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface,
-            textContentColor = MaterialTheme.colorScheme.onSurface
+            }
         )
     }
 }
